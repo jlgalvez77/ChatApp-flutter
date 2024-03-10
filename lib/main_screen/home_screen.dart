@@ -1,5 +1,11 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_chat_app/main_screen/chats_list_screen.dart';
+import 'package:flutter_chat_app/main_screen/groups_screen.dart';
+import 'package:flutter_chat_app/main_screen/people_screen.dart';
+import 'package:flutter_chat_app/utilities/assets_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,59 +15,64 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool isDarkMode = false;
+  final PageController pageController = PageController(initialPage: 0);
+  int currentIndex = 0;
 
-  void getThemeMode() async {
-    final savedThemeMode = await AdaptiveTheme.getThemeMode();
-    if (savedThemeMode == AdaptiveThemeMode.dark) {
-      setState(() {
-        isDarkMode = true;
-      });
-    } else {
-      setState(() {
-        isDarkMode = false;
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    getThemeMode();
-    super.initState();
-  }
+  final List<Widget> pages = const [
+    ChatsListsScreen(),
+    GroupsScreen(),
+    PeopleScreens(),
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Card(
-          child: SwitchListTile(
-            title: const Text('Cambiar Tema'),
-            secondary: Container(
-              height: 30,
-              width: 30,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDarkMode ? Colors.white : Colors.black,
-              ),
-              child: Icon(
-                isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_rounded,
-                color: isDarkMode ? Colors.black : Colors.white,
-              )
+      appBar: AppBar(
+        title: const Text('Chat App'),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundImage: AssetImage(AssetsManager.userImage), 
             ),
-            value: isDarkMode,
-            onChanged: (value) {
-              setState(() {
-                isDarkMode = value;
-              });
-              if (value) {
-                AdaptiveTheme.of(context).setDark();
-              } else {
-                AdaptiveTheme.of(context).setLight();
-              }
-            },
+          )
+        ],
+      ),
+      body: PageView(
+        
+        controller: pageController,
+        onPageChanged: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+        children: pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.chat_bubble_2),
+            label: 'Chats',
           ),
-        ),
-      )
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.group),
+            label: 'Grupos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.globe),
+            label: 'Gente'
+          )
+        ],
+        currentIndex: currentIndex,
+        onTap: (index) {
+          pageController.animateToPage(index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn);
+          setState(() {
+            currentIndex = index;
+          });
+        },
+      ),
     );
   }
 }
